@@ -1,0 +1,286 @@
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from tkinter.filedialog import askopenfilename
+from openpyxl import load_workbook
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+import time
+import ctypes
+
+
+def left(s, amount):
+    return s[:amount]
+
+# Selecting and opening an Excel workbook
+filename = askopenfilename()
+if filename == '':
+    ctypes.windll.user32.MessageBoxW(0, "The file has been not selected. Try again.", "PZU automation", 0)
+    exit()
+
+wb = load_workbook(filename)
+
+for sheet in wb.worksheets:
+
+    # Browser initialization
+    driver = webdriver.Chrome()
+
+    # Opening the website
+    driver.get('https://zgloszenie.pzu.pl/#/')
+
+    # Wait for loading the page
+    posts_loaded = expected_conditions.presence_of_element_located((By.XPATH, '//*[@id="1-POJ"]/div'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+# Type of request
+    if  str(sheet.cell(row=4, column=7).value) == "Pojazdy":
+        button = driver.find_element("xpath", '//*[@id="1-POJ"]/div')
+        button.click()
+    elif str(sheet.cell(row=4, column=7).value) == "Majątek":
+        button = driver.find_element("xpath", '//*[@id="1-MAJ"]/div')
+        button.click()
+    elif str(sheet.cell(row=4, column=7).value) == "Ludzie":
+        button = driver.find_element("xpath", '//*[@id="1-LUD"]/div/div')
+        button.click()
+
+    posts_loaded = expected_conditions.presence_of_element_located((By.XPATH, '//*[@id="2-AC"]/div/div/span[1]'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+# Type of insurance
+    if str(sheet.cell(row=5, column=7).value) == "AC":
+        button = driver.find_element("xpath", '//*[@id="2-AC"]/div/div/span[1]')
+        button.click()
+    else:
+        button = driver.find_element("xpath", '//*[@id="2-OC"]/div/div/span[1]')
+        button.click()
+
+# Date, Time and
+    posts_loaded = expected_conditions.presence_of_element_located(("xpath","/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div/div/div[1]/div/formengine-field-resolver/formengine-datepicker/div[1]/div[1]/input"))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    DateOfAccident = driver.find_element("xpath","/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div/div/div[1]/div/formengine-field-resolver/formengine-datepicker/div[1]/div[1]/input")
+    TimeOfAccident = driver.find_element("xpath", "/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div/div/div[1]/div/formengine-field-resolver/formengine-datepicker/div[2]/input" )
+    RegistrationNumber =driver.find_element("xpath", '//*[@id="4"]')
+
+    DateOfAccident.send_keys(str(sheet.cell(row=6, column=7).value))
+    TimeOfAccident.send_keys(str(sheet.cell(row=7, column=7).value))
+    RegistrationNumber.send_keys(str(sheet.cell(row=8, column=7).value))
+    time.sleep(1)
+
+    button_next = driver.find_element("xpath", "//button[normalize-space()='DALEJ']")
+    button_next.click()
+
+# Type of accident
+    posts_loaded = expected_conditions.presence_of_element_located(("id", '17-1060'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    if str(sheet.cell(row=9, column=7).value) == "Zderzenie z pojazdem w ruchu":
+        button = driver.find_element("id", '17-1060')
+        button.click()
+    elif str(sheet.cell(row=9, column=7).value) == "Zderzenie z przedmiotem":
+        button = driver.find_element("id", '17-282')
+        button.click()
+    elif str(sheet.cell(row=9, column=7).value) == "Zderzenie ze zwierzęciem":
+        button = driver.find_element("id", '17-284')
+        button.click()
+    elif str(sheet.cell(row=9, column=7).value) == "Kradzież części":
+        button = driver.find_element("id", '17-291')
+        button.click()
+
+#OwnerOfTheCar
+    posts_loaded = expected_conditions.presence_of_element_located(("id", '5000-ZGL'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    if str(sheet.cell(row=12, column=7).value) == "Ja":
+        button = driver.find_element("id", '5000-ZGL')
+        button.click()
+    elif str(sheet.cell(row=12, column=7).value) == "Inna osoba":
+        button = driver.find_element("id", '5000-KTO')
+        button.click()
+    elif str(sheet.cell(row=12, column=7).value) == "Firma":
+        button = driver.find_element("id", '5000-FIRMA')
+        button.click()
+    elif str(sheet.cell(row=12, column=7).value) == "Leasing":
+        button = driver.find_element("id", '5000-LEASING')
+        button.click()
+    time.sleep(1)
+
+#Driver
+    if str(sheet.cell(row=13, column=7).value) == "Ja":
+        button = driver.find_element("id", '5001-ZGL')
+        button.click()
+    elif str(sheet.cell(row=13, column=7).value) == "Inna osoba":
+        button = driver.find_element("id", '5001-KTO')
+        button.click()
+    elif str(sheet.cell(row=13, column=7).value) == "Firma":
+        button = driver.find_element("id", '5001-BRA')
+        button.click()
+    time.sleep(1)
+
+# Driver data
+    Name = driver.find_element("id", '9')
+    Surname = driver.find_element("id", '5205')
+    PESEL = driver.find_element("id", '10')
+
+    car_driver = str(sheet.cell(row=14, column=7).value)
+    surname = car_driver.split()[-1]
+    name = str(left(car_driver, len(car_driver)-len(surname)-1))
+
+    Name.send_keys(name)c:
+    Surname.send_keys(surname)
+    PESEL.send_keys(str(sheet.cell(row=15, column=7).value))
+    time.sleep(2)
+
+    button = driver.find_element("xpath", "//button[normalize-space()='DALEJ']")
+    button.click()
+
+# Driver data - more
+    posts_loaded = expected_conditions.presence_of_element_located(("id", '1510'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    phone = driver.find_element("id", "1510")
+    email = driver.find_element("id", "1511")
+    postal_code = driver.find_element("id", "1514")
+    city = driver.find_element("id", "1515")
+    street = driver.find_element("id", "1516")
+    HomeNo = driver.find_element("id", "1512")
+    FlatNo = driver.find_element("id", "1513")
+
+    phone. send_keys(str(sheet.cell(row=16, column=7).value))
+    email.send_keys(str(sheet.cell(row=17, column=7).value))
+    postal_code.send_keys(str(sheet.cell(row=18, column=7).value))
+    city.send_keys(str(sheet.cell(row=19, column=7).value))
+    time.sleep(1)
+    city.send_keys(Keys.TAB)
+    street.send_keys(str(sheet.cell(row=20, column=7).value))
+    HomeNo.send_keys(str(sheet.cell(row=21, column=7).value))
+    FlatNo.send_keys(str(sheet.cell(row=22, column=7).value))
+    time.sleep(1)
+
+    checkbox1 = driver.find_element("xpath", "/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-customer-statements-list/div[1]/label/span[1]")
+    checkbox1.click()
+    time.sleep(1)
+    button.click()
+
+# Car details
+    posts_loaded = expected_conditions.presence_of_element_located(("id", '45'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    brand =  driver.find_element("id", "45")
+    model = driver.find_element("id", "46")
+    YearOfProduction =  driver.find_element("id", "47")
+
+    brand.send_keys(str(sheet.cell(row=25, column=7).value))
+    time.sleep(1)
+    brand.send_keys(Keys.TAB)
+
+    model.send_keys(str(sheet.cell(row=26, column=7).value))
+    time.sleep(1)
+    model.send_keys(Keys.TAB)
+
+    YearOfProduction.send_keys(str(sheet.cell(row=27, column=7).value))
+    time.sleep(2)
+    button.click()
+
+# Place of the accident
+    posts_loaded = expected_conditions.presence_of_element_located(("id", '51'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    place = driver.find_element("id", "51")
+    placeOfAccident = driver.find_element("id", "48-TAK")
+    time.sleep(1)
+    postal_code2  =  driver.find_element("xpath", "/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[2]/div/formengine-sticky-header/div/div[2]/div[1]/div[1]/div/formengine-field-resolver/formengine-place-picker/div/div/div/div[2]/label/input")
+    offender = driver.find_element("id", "5735-NIE")
+    tow = driver.find_element("id", "50-TAK")
+    garage  = driver.find_element("id", "3011-TAK")
+    description = driver.find_element("id", "52")
+
+    place.send_keys(str(sheet.cell(row=30, column=7).value))
+    place.send_keys(Keys.ENTER)
+    placeOfAccident.click()
+    postal_code2.send_keys(str(sheet.cell(row=31, column=7).value))
+    offender.click()
+    tow.click()
+    garage.click()
+    description.send_keys(str(sheet.cell(row=35, column=7).value))
+    time.sleep(2)
+    button.click()
+
+# Damage of the car
+    posts_loaded = expected_conditions.presence_of_element_located(('xpath', '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[2]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-vehicle-damages/div/div[4]/div/div/div/div/p[1]/label'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    element1 = driver.find_element('xpath', '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[2]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-vehicle-damages/div/div[4]/div/div/div/div/p[1]/label') #błotnik przedni lewy
+    element2 = driver.find_element('xpath', '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[2]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-vehicle-damages/div/div[4]/div/div/div/div/p[2]/label') #błotnik tylny lewy
+    element3 = driver.find_element('xpath',' /html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[2]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-vehicle-damages/div/div[4]/div/div/div/div/p[3]/label') #chłodnica
+    element4 = driver.find_element('xpath', '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[2]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-vehicle-damages/div/div[4]/div/div/div/div/p[4]/label')  #dach
+    element5 = driver.find_element('xpath', '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[2]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-vehicle-damages/div/div[4]/div/div/div/div/p[26]/label') #zderzak przedni
+
+    if str(sheet.cell(row=39, column=7).value) == "TAK":
+        element1.click()
+    if str(sheet.cell(row=40, column=7).value) == "TAK":
+        element2.click()
+    if str(sheet.cell(row=41, column=7).value) == "TAK":
+        element3.click()
+    if str(sheet.cell(row=42, column=7).value) == "TAK":
+        element4.click()
+    if str(sheet.cell(row=43, column=7).value) == "TAK":
+        element5.click()
+
+    time.sleep(1)
+    button.click()
+
+    posts_loaded = expected_conditions.presence_of_element_located(('xpath', '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div/div/div/div[1]/formengine-field-resolver/formengine-file-upload/div/div/div/div[2]/div[2]/label'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+    button.click()
+
+# Amount to cover the damage
+    posts_loaded = expected_conditions.presence_of_element_located(("id", "15161"))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    amount = driver.find_element("id", "15161")
+    amount.send_keys('5000')
+
+# Garage
+    posts_loaded = expected_conditions.presence_of_element_located(("xpath", '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-poi-picker-map/div[1]/div/div/div[1]/div[2]/button'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+    Garage = driver.find_element("xpath", '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-poi-picker-map/div[1]/div/div/div[1]/div[2]/button')
+    Garage.click()
+
+    time.sleep(1)
+    Garage = driver.find_element("xpath", '//*[@id="confirm-btn"]/button[1]')
+    Garage.click()
+
+    Garage = driver.find_element('xpath', '/html/body/formengine-root/formengine-generic-form/form/formengine-steps-resolver/div/div[3]/div/formengine-sticky-header/div/div[2]/div/div/div/formengine-field-resolver/formengine-poi-picker-map/div[1]/div/div/div[5]/label/textarea')
+    Garage.send_keys(str(sheet.cell(row=46, column=7).value))
+
+# Confirm and finish
+    Confirm_Button = driver.find_element('xpath', '//*[@id="confirm-btn"]/button[1]')
+    Confirm_Button.click()
+
+# Case ID from website to Excel
+    posts_loaded = expected_conditions.presence_of_element_located(('id', '43'))
+    WebDriverWait(driver, 10).until(posts_loaded)
+
+    CaseID = driver.find_element('id', '43').text
+
+    sheet.cell(row=48, column=7).value = CaseID [len(CaseID)-15:]
+
+    wb.save(filename)
+    driver.close()
+
+#Save and close Excel
+wb.save(filename)
+wb.close
+
+#Messagebox
+ctypes.windll.user32.MessageBoxW(0, "Completed!", "PZU automation", 0)
+
+
+
+
+
+
+
+
+
